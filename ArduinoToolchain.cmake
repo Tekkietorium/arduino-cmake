@@ -53,7 +53,9 @@ if(NOT ARDUINO_SDK_PATH)
     endforeach()
 
     if(UNIX)
-        file(GLOB SDK_PATH_HINTS /usr/share/arduino*
+        file(GLOB SDK_PATH_HINTS
+            /vol/arduino*
+            /usr/share/arduino*
             /opt/local/arduino*
             /opt/arduino*
             /usr/local/share/arduino*)
@@ -80,4 +82,3 @@ if(ARDUINO_SDK_PATH)
 else()
     message(FATAL_ERROR "Could not find Arduino SDK (set ARDUINO_SDK_PATH)!")
 endif()
-
