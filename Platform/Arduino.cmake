@@ -284,7 +284,7 @@
 #=============================================================================#
 cmake_minimum_required(VERSION 2.8.5)
 include(CMakeParseArguments)
-
+cmake_policy(SET CMP0022 NEW)
 
 
 
