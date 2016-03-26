@@ -1,0 +1,126 @@
+{
+    "version": 1,
+    "kind": "project",
+    "id": "A.Arduino",
+    "category": "T.Import",
+    "trDescription": "Import an existing Arduino project.",
+    "trDisplayName": "Arduino sketch",
+    "trDisplayCategory": "Import Project",
+    "icon": "../arduino.png",
+    "featuresRequired": [ ],
+
+    "options":
+    [
+        { "key": "IsTopLevelProject", "value": "%{JS: !'%{Exists:ProjectExplorer.Profile.Ids}' }" },
+        { "key": "ProjectName", "value": "%{JS: '%{TargetPath}'.replace(/^.*[\\\/]/, '')}" },
+        { "key": "ProjectDirectory", "value": "%{TargetPath}" },
+        { "key": "CmakeFileName", "value": "CMakeLists.txt" },
+        { "key": "InoFileName", "value": "%{ProjectName}.ino" }
+    ],
+
+    "pages":
+    [
+        {
+            "trDisplayName": "Project Parameters",
+            "trShortTitle": "Parameters",
+            "typeId": "Fields",
+            "data" :
+            [
+                {
+                    "name": "TargetPath",
+                    "trDisplayName": "Location:",
+                    "mandatory": true,
+                    "type": "PathChooser",
+                    "data": {
+                        "kind": "existingDirectory"
+                    }
+                },
+                {
+                    "name": "BOARD",
+                    "trDisplayName": "Board:",
+                    "mandatory": true,
+                    "type": "ComboBox",
+                    "data":
+                    {
+                        "items": [ { "value": "uno", "trKey": "Arduino Uno" },
+                                   { "value": "atmegang", "trKey": "Arduino NG or older" },
+                                   { "value": "bt", "trKey": "Arduino BT" },
+                                   { "value": "diecimila", "trKey": "Arduino Duemilanove or Diecimila" },
+                                   { "value": "esplora", "trKey": "Arduino Esplora" },
+                                   { "value": "ethernet", "trKey": "Arduino Ethernet" },
+                                   { "value": "fio", "trKey": "Arduino Fio" },
+                                   { "value": "leonardo", "trKey": "Arduino Leonardo" },
+                                   { "value": "lilypad", "trKey": "LilyPad Arduino" },
+                                   { "value": "LilyPadUSB", "trKey": "LilyPad Arduino USB" },
+                                   { "value": "megaADK", "trKey": "Arduino Mega ADK" },
+                                   { "value": "mega", "trKey": "Arduino Mega or Mega 2560" },
+                                   { "value": "micro", "trKey": "Arduino Micro" },
+                                   { "value": "mini", "trKey": "Arduino Mini" },
+                                   { "value": "nano", "trKey": "Arduino Nano" },
+                                   { "value": "pro", "trKey": "Arduino Pro or Pro Mini" },
+                                   { "value": "robotControl", "trKey": "Arduino Robot Control" },
+                                   { "value": "robotMotor", "trKey": "Arduino Robot Motor" },
+                                   { "value": "yun", "trKey": "Arduino Yun" } ]
+                    }
+                },
+                {
+                    "name": "TOOLCHAIN",
+                    "trDisplayName": "CMake toolchain:",
+                    "mandatory": true,
+                    "type": "PathChooser",
+                    "data": {
+                        "kind": "file",
+                        "path": "/vol/arduino.cmake/ArduinoToolchain.cmake"
+                    }
+                },
+                {
+                    "name": "PORT",
+                    "trDisplayName": "Serial port:",
+                    "mandatory": true,
+                    "type": "PathChooser",
+                    "data": {
+                        "kind": "any",
+                        "basePath": "/dev",
+                        "path": "/dev/ttyUSB0"
+                    }
+                },
+                {
+                    "name": "PORT_SPEED",
+                    "trDisplayName": "Serial port baud rate:",
+                    "mandatory": true,
+                    "type": "ComboBox",
+                    "data": { "items": [ "9600", "15200" ] }
+                }
+            ]
+        },
+        {
+            "trDisplayName": "Project Management",
+            "trShortTitle": "Summary",
+            "typeId": "Summary"
+        }
+    ],
+
+    "generators":
+    [
+        {
+            "typeId": "File",
+            "data":
+            [
+                {
+                    "source": "../CMakeLists.txt",
+                    "target": "%{CmakeFileName}",
+                    "openAsProject": true
+                },
+                {
+                    "source": "../CMakeLists.txt.user",
+                    "target": "CMakeLists.txt.user"
+                },
+                {
+                    "source": "../git.ignore",
+                    "target": ".gitignore",
+                    "condition": "%{JS: ( %{IsTopLevelProject} && '%{VersionControl}' === 'G.Git' )}"
+                }
+            ]
+        }
+    ]
+}
