@@ -948,6 +948,27 @@ endfunction()
 #=============================================================================#
 # [PRIVATE/INTERNAL]
 #
+# is_subdirectory(VAR_NAME SUB_DIR PARENT_DIR)
+#
+#=============================================================================#
+function(is_subdirectory VAR_NAME SUB_DIR PARENT_DIR)
+   set(${VAR_NAME} False PARENT_SCOPE)
+   while(TRUE)
+      get_filename_component(SUB_DIR "${SUB_DIR}" DIRECTORY)
+      if("${SUB_DIR}" STREQUAL "${PARENT_DIR}")
+         set(${VAR_NAME} True PARENT_SCOPE)
+         break()
+      endif()
+      if("${SUB_DIR}" STREQUAL "/")
+         break()
+      endif()
+   endwhile()
+endfunction()
+#is_subdirectory(OUT "/vol/ni/share" "/vol")
+
+#=============================================================================#
+# [PRIVATE/INTERNAL]
+#
 # setup_arduino_library(VAR_NAME BOARD_ID LIB_PATH COMPILE_FLAGS LINK_FLAGS)
 #
 #        VAR_NAME    - Vairable wich will hold the generated library names
@@ -979,14 +1000,12 @@ function(setup_arduino_library VAR_NAME BOARD_ID LIB_PATH COMPILE_FLAGS LINK_FLA
 
     set(TARGET_LIB_NAME ${BOARD_ID}_${LIB_NAME})
     if(NOT TARGET ${TARGET_LIB_NAME})
-        string(REGEX REPLACE ".*/" "" LIB_SHORT_NAME ${LIB_NAME})
-
         # Detect if recursion is needed
-        if (NOT DEFINED ${LIB_SHORT_NAME}_RECURSE)
-            set(${LIB_SHORT_NAME}_RECURSE False)
+        if (NOT DEFINED ${LIB_NAME}_RECURSE)
+            set(${LIB_NAME}_RECURSE False)
         endif()
 
-        find_sources(LIB_SRCS ${LIB_PATH} ${${LIB_SHORT_NAME}_RECURSE})
+        find_sources(LIB_SRCS ${LIB_PATH} ${${LIB_NAME}_RECURSE})
         if(LIB_SRCS)
 
             arduino_debug_msg("Generating Arduino ${LIB_NAME} library")
@@ -997,9 +1016,12 @@ function(setup_arduino_library VAR_NAME BOARD_ID LIB_PATH COMPILE_FLAGS LINK_FLA
             find_arduino_libraries(LIB_DEPS "${LIB_SRCS}" "")
 
             foreach(LIB_DEP ${LIB_DEPS})
-                setup_arduino_library(DEP_LIB_SRCS ${BOARD_ID} ${LIB_DEP} "${COMPILE_FLAGS}" "${LINK_FLAGS}")
-                list(APPEND LIB_TARGETS ${DEP_LIB_SRCS})
-                list(APPEND LIB_INCLUDES ${DEP_LIB_SRCS_INCLUDES})
+                is_subdirectory(SUBDIR "${LIB_DEP}" "${LIB_PATH}")
+                if((NOT ${LIB_NAME}_RECURSE OR NOT ${SUBDIR}) AND NOT "${LIB_DEP}" STREQUAL "${LIB_PATH}")
+                   setup_arduino_library(DEP_LIB_SRCS ${BOARD_ID} ${LIB_DEP} "${COMPILE_FLAGS}" "${LINK_FLAGS}")
+                   list(APPEND LIB_TARGETS ${DEP_LIB_SRCS})
+                   list(APPEND LIB_INCLUDES ${DEP_LIB_SRCS_INCLUDES})
+                endif()
             endforeach()
 
             if (LIB_INCLUDES)
