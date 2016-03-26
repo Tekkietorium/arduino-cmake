@@ -384,7 +384,7 @@ function(GENERATE_ARDUINO_LIBRARY INPUT_NAME)
     find_arduino_libraries(TARGET_LIBS "${ALL_SRCS}" "")
     set(LIB_DEP_INCLUDES)
     foreach(LIB_DEP ${TARGET_LIBS})
-        set(LIB_DEP_INCLUDES "${LIB_DEP_INCLUDES} -I\"${LIB_DEP}\"")
+        list(APPEND LIB_DEP_INCLUDES "${LIB_DEP}")
     endforeach()
 
     if(NOT ${INPUT_NO_AUTOLIBS})
@@ -395,10 +395,12 @@ function(GENERATE_ARDUINO_LIBRARY INPUT_NAME)
 
     add_library(${INPUT_NAME} ${ALL_SRCS})
 
-    get_arduino_flags(ARDUINO_COMPILE_FLAGS ARDUINO_LINK_FLAGS  ${INPUT_BOARD} ${INPUT_MANUAL})
+    get_arduino_flags(ARDUINO_INCLUDES ARDUINO_COMPILE_FLAGS ARDUINO_LINK_FLAGS  ${INPUT_BOARD} ${INPUT_MANUAL})
 
+    target_include_directories(${INPUT_NAME} PUBLIC ${ARDUINO_INCLUDES})
+    target_include_directories(${INPUT_NAME} PUBLIC ${LIB_DEP_INCLUDES})
     set_target_properties(${INPUT_NAME} PROPERTIES
-                COMPILE_FLAGS "${ARDUINO_COMPILE_FLAGS} ${COMPILE_FLAGS} ${LIB_DEP_INCLUDES}"
+                COMPILE_FLAGS "${ARDUINO_COMPILE_FLAGS} ${COMPILE_FLAGS}"
                 LINK_FLAGS "${ARDUINO_LINK_FLAGS} ${LINK_FLAGS}")
 
     target_link_libraries(${INPUT_NAME} ${ALL_LIBS} "-lc -lm")
@@ -488,10 +490,10 @@ function(GENERATE_ARDUINO_FIRMWARE INPUT_NAME)
         get_filename_component(INPUT_SKETCH "${INPUT_SKETCH}" ABSOLUTE)
         setup_arduino_sketch(${INPUT_NAME} ${INPUT_SKETCH} ALL_SRCS)
         if (IS_DIRECTORY "${INPUT_SKETCH}")
-            set(LIB_DEP_INCLUDES "${LIB_DEP_INCLUDES} -I\"${INPUT_SKETCH}\"")
+            list(APPEND LIB_DEP_INCLUDES "${INPUT_SKETCH}")
         else()
             get_filename_component(INPUT_SKETCH_PATH "${INPUT_SKETCH}" PATH)
-            set(LIB_DEP_INCLUDES "${LIB_DEP_INCLUDES} -I\"${INPUT_SKETCH_PATH}\"")
+            list(APPEND LIB_DEP_INCLUDES "${INPUT_SKETCH_PATH}")
         endif()
     endif()
 
@@ -501,14 +503,14 @@ function(GENERATE_ARDUINO_FIRMWARE INPUT_NAME)
        find_arduino_libraries(TARGET_LIBS "${ALL_SRCS}" "${INPUT_ARDLIBS}")
        foreach(LIB_DEP ${TARGET_LIBS})
           arduino_debug_msg("Arduino Library: ${LIB_DEP}")
-          set(LIB_DEP_INCLUDES "${LIB_DEP_INCLUDES} -I\"${LIB_DEP}\"")
+          list(APPEND LIB_DEP_INCLUDES "${LIB_DEP}")
        endforeach()
     else()
         setup_arduino_libraries(ALL_LIBS  ${INPUT_BOARD} "${ALL_SRCS}" "${INPUT_ARDLIBS}" "${LIB_DEP_INCLUDES}" "")
         foreach(LIB_INCLUDES ${ALL_LIBS_INCLUDES})
             arduino_debug_msg("Arduino Library Includes: ${LIB_INCLUDES}")
-            set(LIB_DEP_INCLUDES "${LIB_DEP_INCLUDES} ${LIB_INCLUDES}")
         endforeach()
+        list(APPEND LIB_DEP_INCLUDES ${ALL_LIBS_INCLUDES})
     endif()
 
     list(APPEND ALL_LIBS ${CORE_LIB} ${INPUT_LIBS})
@@ -620,7 +622,7 @@ function(GENERATE_ARDUINO_EXAMPLE INPUT_NAME)
     find_arduino_libraries(TARGET_LIBS "${ALL_SRCS}" "")
     set(LIB_DEP_INCLUDES)
     foreach(LIB_DEP ${TARGET_LIBS})
-        set(LIB_DEP_INCLUDES "${LIB_DEP_INCLUDES} -I\"${LIB_DEP}\"")
+        list(APPEND LIB_DEP_INCLUDES "${LIB_DEP}")
     endforeach()
 
     setup_arduino_libraries(ALL_LIBS ${INPUT_BOARD} "${ALL_SRCS}" "" "${LIB_DEP_INCLUDES}" "")
@@ -772,9 +774,10 @@ endfunction()
 #=============================================================================#
 # [PRIVATE/INTERNAL]
 #
-# get_arduino_flags(COMPILE_FLAGS LINK_FLAGS BOARD_ID MANUAL)
+# get_arduino_flags(INCLUDES_VAR COMPILE_FLAGS_VAR LINK_FLAGS_VAR BOARD_ID MANUAL)
 #
-#       COMPILE_FLAGS_VAR -Variable holding compiler flags
+#       INCLUDES_VAR - Variable holding include directories
+#       COMPILE_FLAGS_VAR - Variable holding compiler flags
 #       LINK_FLAGS_VAR - Variable holding linker flags
 #       BOARD_ID - The board id name
 #       MANUAL - (Advanced) Only use AVR Libc/Includes
@@ -782,7 +785,7 @@ endfunction()
 # Configures the the build settings for the specified Arduino Board.
 #
 #=============================================================================#
-function(get_arduino_flags COMPILE_FLAGS_VAR LINK_FLAGS_VAR BOARD_ID MANUAL)
+function(get_arduino_flags INCLUDES_VAR COMPILE_FLAGS_VAR LINK_FLAGS_VAR BOARD_ID MANUAL)
 
     set(BOARD_CORE ${${BOARD_ID}.build.core})
     if(BOARD_CORE)
@@ -803,6 +806,7 @@ function(get_arduino_flags COMPILE_FLAGS_VAR LINK_FLAGS_VAR BOARD_ID MANUAL)
 
         # output
         set(COMPILE_FLAGS "-DF_CPU=${${BOARD_ID}.build.f_cpu} -DARDUINO=${ARDUINO_VERSION_DEFINE} -mmcu=${${BOARD_ID}.build.mcu}")
+        set(INCLUDES)
         if(DEFINED ${BOARD_ID}.build.vid)
             set(COMPILE_FLAGS "${COMPILE_FLAGS} -DUSB_VID=${${BOARD_ID}.build.vid}")
         endif()
@@ -810,19 +814,20 @@ function(get_arduino_flags COMPILE_FLAGS_VAR LINK_FLAGS_VAR BOARD_ID MANUAL)
             set(COMPILE_FLAGS "${COMPILE_FLAGS} -DUSB_PID=${${BOARD_ID}.build.pid}")
         endif()
         if(NOT MANUAL)
-            set(COMPILE_FLAGS "${COMPILE_FLAGS} -I\"${${BOARD_CORE}.path}\" -I\"${ARDUINO_LIBRARIES_PATH}\"")
+            list(APPEND INCLUDES "${${BOARD_CORE}.path}" "${ARDUINO_LIBRARIES_PATH}")
         endif()
         set(LINK_FLAGS "-mmcu=${${BOARD_ID}.build.mcu}")
         if(ARDUINO_SDK_VERSION VERSION_GREATER 1.0 OR ARDUINO_SDK_VERSION VERSION_EQUAL 1.0)
             if(NOT MANUAL)
                 set(PIN_HEADER ${${${BOARD_ID}.build.variant}.path})
                 if(PIN_HEADER)
-                    set(COMPILE_FLAGS "${COMPILE_FLAGS} -I\"${PIN_HEADER}\"")
+                    list(APPEND INCLUDES "${PIN_HEADER}")
                 endif()
             endif()
         endif()
 
         # output
+        set(${INCLUDES_VAR} "${INCLUDES}" PARENT_SCOPE)
         set(${COMPILE_FLAGS_VAR} "${COMPILE_FLAGS}" PARENT_SCOPE)
         set(${LINK_FLAGS_VAR} "${LINK_FLAGS}" PARENT_SCOPE)
 
@@ -853,7 +858,9 @@ function(setup_arduino_core VAR_NAME BOARD_ID)
             # Debian/Ubuntu fix
             list(REMOVE_ITEM CORE_SRCS "${BOARD_CORE_PATH}/main.cxx")
             add_library(${CORE_LIB_NAME} ${CORE_SRCS})
-            get_arduino_flags(ARDUINO_COMPILE_FLAGS ARDUINO_LINK_FLAGS ${BOARD_ID} FALSE)
+            get_arduino_flags(ARDUINO_INCLUDES ARDUINO_COMPILE_FLAGS ARDUINO_LINK_FLAGS ${BOARD_ID} FALSE)
+
+            target_include_directories(${CORE_LIB_NAME} PUBLIC ${ARDUINO_INCLUDES})
             set_target_properties(${CORE_LIB_NAME} PROPERTIES
                 COMPILE_FLAGS "${ARDUINO_COMPILE_FLAGS}"
                 LINK_FLAGS "${ARDUINO_LINK_FLAGS}")
@@ -1002,7 +1009,7 @@ function(setup_arduino_library VAR_NAME BOARD_ID LIB_PATH COMPILE_FLAGS LINK_FLA
             arduino_debug_msg("Generating Arduino ${LIB_NAME} library")
             add_library(${TARGET_LIB_NAME} STATIC ${LIB_SRCS})
 
-            get_arduino_flags(ARDUINO_COMPILE_FLAGS ARDUINO_LINK_FLAGS ${BOARD_ID} FALSE)
+            get_arduino_flags(ARDUINO_INCLUDES ARDUINO_COMPILE_FLAGS ARDUINO_LINK_FLAGS ${BOARD_ID} FALSE)
 
             find_arduino_libraries(LIB_DEPS "${LIB_SRCS}" "")
 
@@ -1015,14 +1022,16 @@ function(setup_arduino_library VAR_NAME BOARD_ID LIB_PATH COMPILE_FLAGS LINK_FLA
                 endif()
             endforeach()
 
+            list(APPEND LIB_INCLUDES "${LIB_PATH}")
             if (LIB_INCLUDES)
-                string(REPLACE ";" " " LIB_INCLUDES "${LIB_INCLUDES}")
+                list(REMOVE_DUPLICATES LIB_INCLUDES)
             endif()
 
+            target_include_directories(${TARGET_LIB_NAME} PUBLIC ${ARDUINO_INCLUDES})
+            target_include_directories(${TARGET_LIB_NAME} PUBLIC ${LIB_INCLUDES})
             set_target_properties(${TARGET_LIB_NAME} PROPERTIES
-                COMPILE_FLAGS "${ARDUINO_COMPILE_FLAGS} ${LIB_INCLUDES} -I\"${LIB_PATH}\" -I\"${LIB_PATH}/utility\" ${COMPILE_FLAGS}"
+                COMPILE_FLAGS "${ARDUINO_COMPILE_FLAGS} ${COMPILE_FLAGS}"
                 LINK_FLAGS "${ARDUINO_LINK_FLAGS} ${LINK_FLAGS}")
-            list(APPEND LIB_INCLUDES "-I\"${LIB_PATH}\" -I\"${LIB_PATH}/utility\"")
 
             target_link_libraries(${TARGET_LIB_NAME} ${BOARD_ID}_CORE ${LIB_TARGETS})
             list(APPEND LIB_TARGETS ${TARGET_LIB_NAME})
@@ -1079,14 +1088,14 @@ endfunction()
 #        BOARD_ID    - Arduino board ID
 #        ALL_SRCS    - All sources
 #        ALL_LIBS    - All libraries
-#        COMPILE_FLAGS - Compile flags
+#        ALL_INCLUDES - All include dirs
 #        LINK_FLAGS    - Linker flags
 #        MANUAL - (Advanced) Only use AVR Libc/Includes
 #
 # Creates an Arduino firmware target.
 #
 #=============================================================================#
-function(setup_arduino_target TARGET_NAME BOARD_ID ALL_SRCS ALL_LIBS COMPILE_FLAGS LINK_FLAGS MANUAL)
+function(setup_arduino_target TARGET_NAME BOARD_ID ALL_SRCS ALL_LIBS ALL_INCLUDES LINK_FLAGS MANUAL)
     set(INO_FILES)
     foreach(src ${ALL_SRCS})
         if("${src}" MATCHES "[.]ino$")
@@ -1100,8 +1109,10 @@ function(setup_arduino_target TARGET_NAME BOARD_ID ALL_SRCS ALL_LIBS COMPILE_FLA
     add_executable(${TARGET_NAME} ${ALL_SRCS})
     set_target_properties(${TARGET_NAME} PROPERTIES SUFFIX ".elf")
 
-    get_arduino_flags(ARDUINO_COMPILE_FLAGS ARDUINO_LINK_FLAGS  ${BOARD_ID} ${MANUAL})
+    get_arduino_flags(ARDUINO_INCLUDES ARDUINO_COMPILE_FLAGS ARDUINO_LINK_FLAGS  ${BOARD_ID} ${MANUAL})
 
+    target_include_directories(${TARGET_NAME} PUBLIC ${ARDUINO_INCLUDES})
+    target_include_directories(${TARGET_NAME} PUBLIC ${ALL_INCLUDES})
     set_target_properties(${TARGET_NAME} PROPERTIES
                 COMPILE_FLAGS "${ARDUINO_COMPILE_FLAGS} ${COMPILE_FLAGS}"
                 LINK_FLAGS "${ARDUINO_LINK_FLAGS} ${LINK_FLAGS}")
