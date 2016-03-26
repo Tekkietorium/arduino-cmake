@@ -896,14 +896,6 @@ function(find_arduino_libraries VAR_NAME SRCS ARDLIBS)
     foreach(SRC ${SRCS})
 
 message("src: ${SRC}")
-        # Skipping generated files. They are, probably, not exist yet.
-        # TODO: Maybe it's possible to skip only really nonexisting files,
-        # but then it wiil be less deterministic.
-        get_source_file_property(_srcfile_generated ${SRC} GENERATED)
-        # Workaround for sketches, which are marked as generated
-        get_source_file_property(_sketch_generated ${SRC} GENERATED_SKETCH)
-
-        if(NOT ${_srcfile_generated} OR ${_sketch_generated})
             get_filename_component(SRC "${SRC}" ABSOLUTE)
             get_filename_component(SRC_DIR "${SRC}" DIRECTORY)
 
@@ -936,7 +928,6 @@ message("src: ${SRC}")
 #message("  search ${file}, found: ${path}")
                 endif()
             endforeach()
-        endif()
     endforeach()
     if(ARDUINO_LIBS)
         list(REMOVE_DUPLICATES ARDUINO_LIBS)
@@ -1096,7 +1087,6 @@ endfunction()
 #
 #=============================================================================#
 function(setup_arduino_target TARGET_NAME BOARD_ID ALL_SRCS ALL_LIBS COMPILE_FLAGS LINK_FLAGS MANUAL)
-
     add_executable(${TARGET_NAME} ${ALL_SRCS})
     set_target_properties(${TARGET_NAME} PROPERTIES SUFFIX ".elf")
 
@@ -1771,9 +1761,6 @@ function(SETUP_ARDUINO_SKETCH TARGET_NAME SKETCH_PATH OUTPUT_VAR)
                            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
                            DEPENDS ${MAIN_SKETCH} ${SKETCH_SOURCES}
                            COMMENT "Regnerating ${SKETCH_NAME} Sketch")
-        set_source_files_properties(${SKETCH_CPP} PROPERTIES GENERATED TRUE)
-        # Mark file that it exists for find_file
-        set_source_files_properties(${SKETCH_CPP} PROPERTIES GENERATED_SKETCH TRUE)
 
         set("${OUTPUT_VAR}" ${${OUTPUT_VAR}} ${SKETCH_CPP} PARENT_SCOPE)
     else()
