@@ -1087,6 +1087,16 @@ endfunction()
 #
 #=============================================================================#
 function(setup_arduino_target TARGET_NAME BOARD_ID ALL_SRCS ALL_LIBS COMPILE_FLAGS LINK_FLAGS MANUAL)
+    set(INO_FILES)
+    foreach(src ${ALL_SRCS})
+        if("${src}" MATCHES "[.]ino$")
+            list(APPEND INO_FILES "${src}")
+        endif()
+    endforeach()
+    if(INO_FILES)
+        set_source_files_properties(${INO_FILES} PROPERTIES LANGUAGE CXX COMPILE_FLAGS "-x c++")
+     endif()
+
     add_executable(${TARGET_NAME} ${ALL_SRCS})
     set_target_properties(${TARGET_NAME} PROPERTIES SUFFIX ".elf")
 
