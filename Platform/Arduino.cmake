@@ -968,6 +968,11 @@ function(setup_arduino_library VAR_NAME BOARD_ID LIB_PATH COMPILE_FLAGS LINK_FLA
     set(LIB_INCLUDES)
 
     get_filename_component(LIB_NAME ${LIB_PATH} NAME)
+    if("${LIB_NAME}" STREQUAL "src")
+       get_filename_component(LIB_NAME ${LIB_PATH} DIRECTORY)
+       get_filename_component(LIB_NAME ${LIB_NAME} NAME)
+    endif()
+
     set(TARGET_LIB_NAME ${BOARD_ID}_${LIB_NAME})
     if(NOT TARGET ${TARGET_LIB_NAME})
         string(REGEX REPLACE ".*/" "" LIB_SHORT_NAME ${LIB_NAME})
