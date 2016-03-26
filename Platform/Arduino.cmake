@@ -914,19 +914,20 @@ function(find_arduino_libraries VAR_NAME SRCS ARDLIBS)
                 list(APPEND SRC_CONTENTS "#include <${LIBNAME}.h>")
             endforeach()
 
+            get_filename_component(SRC_DIR "${SRC}" DIRECTORY)
             foreach(SRC_LINE ${SRC_CONTENTS})
                 if("${SRC_LINE}" MATCHES "^[ \t]*#[ \t]*include[ \t]*[<\"]([^>\"]*)[>\"]")
+                    set(file "${CMAKE_MATCH_1}")
                     get_filename_component(INCLUDE_NAME ${CMAKE_MATCH_1} NAME_WE)
                     get_property(LIBRARY_SEARCH_PATH
                                  DIRECTORY     # Property Scope
                                  PROPERTY LINK_DIRECTORIES)
-                    foreach(LIB_SEARCH_PATH ${LIBRARY_SEARCH_PATH} ${ARDUINO_LIBRARIES_PATH} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/libraries ${ARDUINO_EXTRA_LIBRARIES_PATH})
-                        if(EXISTS ${LIB_SEARCH_PATH}/${INCLUDE_NAME}/${CMAKE_MATCH_1})
-                            list(APPEND ARDUINO_LIBS ${LIB_SEARCH_PATH}/${INCLUDE_NAME})
-                            break()
-                        endif()
-                        if(EXISTS ${LIB_SEARCH_PATH}/${CMAKE_MATCH_1})
-                            list(APPEND ARDUINO_LIBS ${LIB_SEARCH_PATH})
+                    foreach(LIB_SEARCH_PATH ${SRC_DIR} ${LIBRARY_SEARCH_PATH} ${ARDUINO_LIBRARIES_PATH}  ${ARDUINO_EXTRA_LIBRARIES_PATH})
+                        file(GLOB_RECURSE paths ${LIB_SEARCH_PATH}/${file})
+                        if("${paths}" STRGREATER "")
+                            list(GET paths 0 path)
+                            get_filename_component(path "${path}" DIRECTORY)
+                            list(APPEND ARDUINO_LIBS ${path})
                             break()
                         endif()
                     endforeach()
@@ -1021,7 +1022,7 @@ endfunction()
 #
 # setup_arduino_libraries(VAR_NAME BOARD_ID SRCS COMPILE_FLAGS LINK_FLAGS)
 #
-#        VAR_NAME    - Vairable wich will hold the generated library names
+#        VAR_NAME    - Variable wich will hold the generated library names
 #        BOARD_ID    - Board ID
 #        SRCS        - source files
 #        COMPILE_FLAGS - Compile flags
