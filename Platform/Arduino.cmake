@@ -895,6 +895,7 @@ function(find_arduino_libraries VAR_NAME SRCS ARDLIBS)
     set(ARDUINO_LIBS )
     foreach(SRC ${SRCS})
 
+message("src: ${SRC}")
         # Skipping generated files. They are, probably, not exist yet.
         # TODO: Maybe it's possible to skip only really nonexisting files,
         # but then it wiil be less deterministic.
@@ -918,6 +919,7 @@ function(find_arduino_libraries VAR_NAME SRCS ARDLIBS)
             foreach(SRC_LINE ${SRC_CONTENTS})
                 if("${SRC_LINE}" MATCHES "^[ \t]*#[ \t]*include[ \t]*[<\"]([^>\"]*)[>\"]")
                     set(file "${CMAKE_MATCH_1}")
+                    set(path)
                     get_filename_component(INCLUDE_NAME ${CMAKE_MATCH_1} NAME_WE)
                     get_property(LIBRARY_SEARCH_PATH
                                  DIRECTORY     # Property Scope
@@ -931,6 +933,7 @@ function(find_arduino_libraries VAR_NAME SRCS ARDLIBS)
                             break()
                         endif()
                     endforeach()
+#message("  search ${file}, found: ${path}")
                 endif()
             endforeach()
         endif()
@@ -938,6 +941,7 @@ function(find_arduino_libraries VAR_NAME SRCS ARDLIBS)
     if(ARDUINO_LIBS)
         list(REMOVE_DUPLICATES ARDUINO_LIBS)
     endif()
+message("  libs: ${ARDUINO_LIBS}")
     set(${VAR_NAME} ${ARDUINO_LIBS} PARENT_SCOPE)
 endfunction()
 
