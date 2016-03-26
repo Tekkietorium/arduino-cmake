@@ -1760,7 +1760,7 @@ function(SETUP_ARDUINO_SKETCH TARGET_NAME SKETCH_PATH OUTPUT_VAR)
                            COMMAND ${CMAKE_COMMAND} ${CMAKE_SOURCE_DIR}
                            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
                            DEPENDS ${MAIN_SKETCH} ${SKETCH_SOURCES}
-                           COMMENT "Regnerating ${SKETCH_NAME} Sketch")
+                           COMMENT "Regenerating sketch: ${SKETCH_NAME}")
 
         set("${OUTPUT_VAR}" ${${OUTPUT_VAR}} ${SKETCH_CPP} PARENT_SCOPE)
     else()
