@@ -904,9 +904,10 @@ message("src: ${SRC}")
         get_source_file_property(_sketch_generated ${SRC} GENERATED_SKETCH)
 
         if(NOT ${_srcfile_generated} OR ${_sketch_generated})
-            if(NOT (EXISTS ${SRC} OR
-                    EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${SRC} OR
-                    EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${SRC}))
+            get_filename_component(SRC "${SRC}" ABSOLUTE)
+            get_filename_component(SRC_DIR "${SRC}" DIRECTORY)
+
+            if(NOT (EXISTS ${SRC}))
                 message(FATAL_ERROR "Invalid source file: ${SRC}")
             endif()
             file(STRINGS ${SRC} SRC_CONTENTS)
@@ -915,7 +916,6 @@ message("src: ${SRC}")
                 list(APPEND SRC_CONTENTS "#include <${LIBNAME}.h>")
             endforeach()
 
-            get_filename_component(SRC_DIR "${SRC}" DIRECTORY)
             foreach(SRC_LINE ${SRC_CONTENTS})
                 if("${SRC_LINE}" MATCHES "^[ \t]*#[ \t]*include[ \t]*[<\"]([^>\"]*)[>\"]")
                     set(file "${CMAKE_MATCH_1}")
