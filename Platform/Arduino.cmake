@@ -895,7 +895,7 @@ function(find_arduino_libraries VAR_NAME SRCS ARDLIBS)
     set(ARDUINO_LIBS )
     foreach(SRC ${SRCS})
 
-message("src: ${SRC}")
+#message("src: ${SRC}")
             get_filename_component(SRC "${SRC}" ABSOLUTE)
             get_filename_component(SRC_DIR "${SRC}" DIRECTORY)
 
@@ -932,7 +932,7 @@ message("src: ${SRC}")
     if(ARDUINO_LIBS)
         list(REMOVE_DUPLICATES ARDUINO_LIBS)
     endif()
-message("  libs: ${ARDUINO_LIBS}")
+#message("  libs: ${ARDUINO_LIBS}")
     set(${VAR_NAME} ${ARDUINO_LIBS} PARENT_SCOPE)
 endfunction()
 
