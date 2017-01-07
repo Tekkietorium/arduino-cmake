@@ -53,8 +53,8 @@
                                    { "value": "nano", "trKey": "Arduino Nano" },
                                    { "value": "pro", "trKey": "Arduino Pro or Pro Mini" },
                                    { "value": "robotControl", "trKey": "Arduino Robot Control" },
-                                   { "value": "robotMotor", "trKey": "Arduino Robot Motor" }, 
-                                   { "value": "yun", "trKey": "Arduino Yun" } ] 
+                                   { "value": "robotMotor", "trKey": "Arduino Robot Motor" },
+                                   { "value": "yun", "trKey": "Arduino Yun" } ]
                     }
                 },
                 {
@@ -64,7 +64,7 @@
                     "type": "PathChooser",
                     "data": {
                         "kind": "file",
-                        "path": "/vol/arduino.cmake/ArduinoToolchain.cmake" 
+                        "path": "/usr/local/share/arduino-cmake/ArduinoToolchain.cmake"
                     }
                 },
                 {

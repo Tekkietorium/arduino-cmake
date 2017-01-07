@@ -962,7 +962,6 @@ function(is_subdirectory VAR_NAME SUB_DIR PARENT_DIR)
       endif()
    endwhile()
 endfunction()
-#is_subdirectory(OUT "/vol/ni/share" "/vol")
 
 #=============================================================================#
 # [PRIVATE/INTERNAL]

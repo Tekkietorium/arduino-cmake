@@ -70,7 +70,7 @@
                     "type": "PathChooser",
                     "data": {
                         "kind": "file",
-                        "path": "/vol/arduino.cmake/ArduinoToolchain.cmake"
+                        "path": "/usr/local/share/arduino-cmake/ArduinoToolchain.cmake"
                     }
                 },
                 {
