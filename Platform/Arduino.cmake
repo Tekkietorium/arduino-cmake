@@ -906,7 +906,7 @@ function(find_arduino_libraries VAR_NAME SRCS ARDLIBS)
             get_filename_component(SRC "${SRC}" ABSOLUTE)
             get_filename_component(SRC_DIR "${SRC}" DIRECTORY)
 
-            if(NOT (EXISTS ${SRC}))
+            if(NOT (EXISTS "${SRC}"))
                 message(FATAL_ERROR "Invalid source file: ${SRC}")
             endif()
             file(STRINGS ${SRC} SRC_CONTENTS)
